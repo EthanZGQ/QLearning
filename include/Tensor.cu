@@ -113,8 +113,8 @@ public:
         std::cout << "backward okkkk" << std::endl;
     }
 
-    void adjust(){
-        m_data -= m_grad * 0.01f;
+    void adjust(T lr){
+        m_data -= m_grad * lr;
     }
 
     void zeroGrad(){
