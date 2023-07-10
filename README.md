@@ -1,2 +1,2 @@
 # QLearning
-a C++ dynamic graph-based deep learning framework"
+a C++ dynamic graph-based deep learning framework
