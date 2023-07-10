@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.10)
+project(QLearning LANGUAGES CUDA CXX)
+
+set(MY_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+set(OpenCV_DIR "D:\\opencv\\opencv\\build")
+find_package(OpenCV REQUIRED NO_MODULE  NO_DEFAULT_PATH)
+if(OpenCV_FOUND)
+    message(STATUS "find the OpenCV , the path is ${OpenCV_INCLUDE_DIRS}")
+    message(STATUS "find the OpenCV, the path is ${OpenCV_LIBS}")
+endif(OpenCV_FOUND)
+
+set(Eigen_DIR "D:\\eigen\\eigen-3.3.8")
+
+add_executable(main main.cu)
+target_include_directories(main PUBLIC ${MY_INCLUDE} ${OpenCV_INCLUDE_DIRS} ${Eigen_DIR})
+target_link_libraries(main ${OpenCV_LIBS})
+
