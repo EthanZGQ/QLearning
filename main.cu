@@ -10,13 +10,13 @@
 int main(){
 
     auto data = std::make_shared<Tensor<float>>(std::initializer_list<int>({5,5}));
+    data->getData() = Eigen::ArrayXXf::Constant(5 , 5 , 1);
     std::cout << "the data is " << std::endl << data->getData() << std::endl;
-    ReLu<float> ac;
+    Tanh<float> ac;
     auto output = ac.forward({data});
-    output->getGrad() = Eigen::ArrayXXf::Constant(5,5,1);
+    output->getGrad() = Eigen::ArrayXXf::Constant(5,5,0.2);
     std::cout << "the grad is " << std::endl << output->getGrad() << std::endl;
     output->backward();
-    std::cout << "the grad is " << std::endl << output->getGrad() << std::endl;
     std::cout << "the data is " << std::endl << output->getData() << std::endl;
     std::cout << "the grad is " << std::endl << data->getGrad() << std::endl;
 

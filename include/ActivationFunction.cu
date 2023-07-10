@@ -33,7 +33,7 @@ public:
     }
 
     void backward() override{
-        preTensorNodes["input"]->getGrad() = (1.f - backTensorNode->getData()) * backTensorNode->getData();
+        preTensorNodes["input"]->getGrad() = backTensorNode->getGrad() * (1.f - backTensorNode->getData()) * backTensorNode->getData();
     }
 
 };
@@ -73,6 +73,43 @@ public:
     }
 
 };
+
+template<class T>
+class Tanh:public CalculateNodeBase<T>{
+private:
+    bool preCheck(std::initializer_list<std::shared_ptr<Tensor<T>>> & data){
+        if(data.size() != 1) throw "Need only one input !";
+        auto input = * data.begin();
+        preTensorNodes["input"] = input;
+        input->addUseTime();
+
+        if(!backTensorNode){
+            backTensorNode = std::make_shared<Tensor<T>>(input->shape() , false , this);
+        }
+        else{
+            if(backTensorNode->shape() != input->shape()){
+                backTensorNode = std::make_shared<Tensor<T>>(input->shape() , false , this);
+            }
+        }
+        return true;
+    }
+public:
+    std::shared_ptr<Tensor<T>> forward(std::initializer_list<std::shared_ptr<Tensor<T>>> data) override{
+        bool safe = preCheck(data);
+        auto exp_1 = preTensorNodes["input"]->getData().exp();
+        auto exp_2 = exp_1.cwiseInverse();
+        backTensorNode->getData() = (exp_1 - exp_2) / (exp_1 + exp_2);
+        return backTensorNode;
+    }
+
+    void backward() override{
+        preTensorNodes["input"]->getGrad() = backTensorNode->getGrad() * (1 - backTensorNode->getData().pow(2));
+    }
+
+};
+
+
+
 
 
 #endif
