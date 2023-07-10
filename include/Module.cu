@@ -13,7 +13,7 @@ class Module{
 public:    
     std::map<std::string , std::shared_ptr<Module<T>>> moduleList;
     std::map<std::string , std::shared_ptr<calculateNodeBase<T>>> calculateNodeList;
-    virtual std::shared_ptr<Tensor<T>> forward(std::initializer_list<Tensor<T>> data) = 0;
+    virtual std::shared_ptr<Tensor<T>> forward(std::initializer_list<std::shared_ptr<Tensor<T>>> data) = 0;
 };
 
 
