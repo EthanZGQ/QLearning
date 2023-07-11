@@ -49,7 +49,7 @@ public:
     void backward() override{
         preTensorNodes["input"]->getGrad() += -preTensorNodes["label"] ->getData() + preTensorNodes["input"] ->getData();
         if(m_average){
-            preTensorNodes["input"]->getGrad() = preTensorNodes["input"]->getGrad()/backTensorNode->shape().front();
+            preTensorNodes["input"]->getGrad() /= preTensorNodes["input"] ->shape().front();
         }
     } 
 };
