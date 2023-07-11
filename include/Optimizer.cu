@@ -12,8 +12,8 @@ template<class T>
 class Optimizer{
 public:
     std::vector<std::shared_ptr<Tensor<T>>> learnParameterList;
-    virtual zeroGrad() = 0;
-    virtual step() = 0;
+    virtual void zeroGrad() = 0;
+    virtual void step() = 0;
 };
 
 
@@ -33,21 +33,21 @@ public:
         }
     }
 
-    void findCalculateNode(Module<T> & net){
-        for(auto & x : net.calculateNodeList){
-            for(auto & dataNode : x->preTensorNodes){
-                if(dataNode->second->m_needGrad){
-                    learnParameterList.push(dataNode->second);
+    void findCalculateNode(std::shared_ptr<Module<T>> net){
+        for(auto & x : net->calculateNodeList){
+            for(auto & dataNode : x.second->preTensorNodes){
+                if(dataNode.second->needGrad()){
+                    learnParameterList.push_back(dataNode.second);
                 }
             }
         }
-        for(auto & x : net.moduleList){
-            findCalculateNode(x);
+        for(auto & x : net->moduleList){
+            findCalculateNode(x.second);
         }
     }
 
     T learnRate ;
-    SGD(Module<T> & net , T lr = 0.001f){
+    SGD(std::shared_ptr<Module<T>> net , T lr = 0.001f){
         learnRate = lr;
         findCalculateNode(net);
     }

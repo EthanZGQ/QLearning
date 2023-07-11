@@ -95,7 +95,6 @@ public:
 
 
     void backward(){
-        std::cout <<"backward begin" <<std::endl;
         std::queue<CalculateNodeBase<T>*> myQ;
         myQ.push(m_preCalculateNode);
         while(myQ.size()){
@@ -110,7 +109,6 @@ public:
                 if( ptr->useTimeEmpty() && tempPtr) myQ.push(tempPtr);
             }
         }
-        std::cout << "backward okkkk" << std::endl;
     }
 
     void adjust(T lr){
@@ -146,6 +144,10 @@ public:
 
     const std::vector<int> & shape(){
         return m_shape;
+    }
+
+    bool needGrad(){
+        return m_needGrad;
     }
 
 };

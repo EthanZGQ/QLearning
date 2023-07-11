@@ -7,14 +7,14 @@
 #include<initializer_list>
 
 template<class T>
-class BCELoss:public CalculateNodeBase<T>{
+class MSELoss:public CalculateNodeBase<T>{
 private:
     bool m_average = true;
     bool m_reduce = true;
 
 public:
     
-    BCELoss(bool average = true , bool reduce = true):m_average(average) , m_reduce(reduce) {};
+    MSELoss(bool average = true , bool reduce = true):m_average(average) , m_reduce(reduce) {};
 
     std::shared_ptr<Tensor<T>> forward(std::initializer_list<std::shared_ptr<Tensor<T>>> data) override{
         if(data.size() != 2) return nullptr;
@@ -48,6 +48,9 @@ public:
 
     void backward() override{
         preTensorNodes["input"]->getGrad() += -preTensorNodes["label"] ->getData() + preTensorNodes["input"] ->getData();
+        if(m_average){
+            preTensorNodes["input"]->getGrad() = preTensorNodes["input"]->getGrad()/backTensorNode->shape().front();
+        }
     } 
 };
 
