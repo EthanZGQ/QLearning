@@ -29,11 +29,25 @@ private:
     std::mutex mx;
     std::deque<std::pair<std::shared_ptr<Tensor<float>> , std::shared_ptr<Tensor<float>>>> dataPool;
     std::deque<int> idxList;
+    std::vector<int> outputDataShape;
+    std::vector<int> outputLabelShape;
+
+    void getDataAndLabelShape(std::shared_ptr<DatasetBase<T>> & dataset){
+        auto frontDataAndLabel = dataset->getItem(0);
+        outputDataShape = frontDataAndLabel.first->shape();
+        outputDataShape.insert(outputDataShape.begin() , m_batchSize);
+        outputLabelShape = frontDataAndLabel.second->shape();
+        outputLabelShape.insert(outputLabelShape.begin() , m_batchSize);
+    }
 
 public:
     DataLoader(std::shared_ptr<DatasetBase<T>> dataset , int batchSize = 1 , int numWorkers = 0 , bool shuffle = true):
     m_dataset(dataset) , m_batchSize(batchSize) , m_numWorkers(numWorkers) , m_shuffle(shuffle){
-
+        getDataAndLabelShape(dataset);
+        threadWorkers.resize(numWorkers);
+        for(int i = 0 ; i < numWorkers ; ++i){
+            threadWorkers[i] = std::thread(&DataLoader::worker , this);
+        }
     }
 
     ~DataLoader(){
@@ -77,6 +91,15 @@ public:
 
     void worker(){
         std::vector<int> threadIdxList;
+        int dataBackDim = outputDataShape.back();
+        int labelBackDim = outputLabelShape.back();
+        int dataCol = 1;
+        int labelCol = 1;
+        for(int i = 1 ; i < outputLabelShape.size() - 1 ; ++i){
+            dataCol *= outputDataShape[i];
+            labelCol *= outputLabelShape[i];
+        }
+
         while(true){
             std::unique_lock<std::mutex> lck(mx);
             while(idxList.size() < m_numWorkers && || dataPool.size() + busyWorkers >= m_numWorkers){
@@ -91,15 +114,20 @@ public:
             }
             lck.unlock();
             // xxxxx
-            auto inputData = std::make_shared<Tensor<T>>({1});
-            auto inputLabel = std::make_shared<Tensor<T>>({1});
+            auto outputData = std::make_shared<Tensor<T>>(outputDataShape);
+            auto outputLabel = std::make_shared<Tensor<T>>(outputLabelShape);
+            for(int i = 0 ; i < m_batchSize ; ++i){
+                auto tempData = m_dataset->getItem(threadIdxList.back());
+                threadIdxList.pop_back();
+                outputData->getData().block<dataBackDim , dataCol>(0 , i*dataCol) = tempData.first->getData();
+                outputLabel->getData().block<labelBackDim , labelCol>(0 , i*labelCol) = tempData.second->getData();
+            }
             //xxx get the data
             lck.lock();
             --busyWorkers;
-            dataPool.push_back({inputData , inputLabel});
+            dataPool.push_back({outputData , outputLabel});
             cv_consumer.notify_one();
         }
-
     }
 };
 
