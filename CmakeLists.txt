@@ -10,7 +10,7 @@ if(OpenCV_FOUND)
     message(STATUS "find the OpenCV, the path is ${OpenCV_LIBS}")
 endif(OpenCV_FOUND)
 
-set(Eigen_DIR "D:\\eigen\\eigen-3.3.8")
+set(Eigen_DIR "D:\\eigen\\eigen-3.4.0")
 
 add_executable(main main.cu)
 target_include_directories(main PUBLIC ${MY_INCLUDE} ${OpenCV_INCLUDE_DIRS} ${Eigen_DIR})
