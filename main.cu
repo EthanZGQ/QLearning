@@ -38,7 +38,7 @@ int main(){
     auto mlp = std::make_shared<MLP>();
     auto opt = std::make_shared<SGD<float>>(mlp , 0.001f);
     auto bceLoss = std::make_shared<MSELoss<float>>();
-    int turn = 10000;
+    int turn = 1000;
     for(int i = 0 ; i < turn ; ++i){
         opt->zeroGrad();
         Eigen::ArrayXXf input(3,2);
