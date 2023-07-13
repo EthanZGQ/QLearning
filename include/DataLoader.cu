@@ -46,7 +46,7 @@ public:
         getDataAndLabelShape(dataset);
         threadWorkers.resize(numWorkers);
         for(int i = 0 ; i < numWorkers ; ++i){
-            threadWorkers[i] = std::thread(&DataLoader::worker , this);
+            threadWorkers[i] = std::thread(&DataLoader::work , this);
         }
     }
 
@@ -56,6 +56,7 @@ public:
         for(auto & tempThread : threadWorkers){
             if(tempThread.joinable()) tempThread.join();
         }
+        std::cout << "end the dataloader" << std::endl;
     }
 
     std::pair<std::shared_ptr<Tensor<T>> , std::shared_ptr<Tensor<T>>> getData(){
@@ -65,14 +66,14 @@ public:
         }
         auto data = dataPool.front();
         dataPool.pop_front();
-        if(idxList.size() >= m_numWorkers){
+        if(idxList.size() >= m_batchSize){
             cv_producers.notify_one();
         }
         return data;
     }
 
     bool empty(){
-        return idxList.size() < m_numWorkers && busyWorkers == 0 && dataPool.empty();
+        return idxList.size() < m_batchSize && busyWorkers == 0 && dataPool.empty();
     }
 
     void reset(){
@@ -85,14 +86,16 @@ public:
             std::srand(std::chrono::system_clock::now().time_since_epoch().count());
             std::random_shuffle(idxList.begin() , idxList.end());
         }
-        dataPool.clear()
+        dataPool.clear();
         cv_producers.notify_all();
+        std::cout << "end reset , the dataPool size is " << dataPool.size() << "the idxList size is " << idxList.size() << std::endl;
     }
 
-    void worker(){
+    void work(){
+        std::cout << "one thread start to work" << std::endl;
         std::vector<int> threadIdxList;
-        int dataBackDim = outputDataShape.back();
-        int labelBackDim = outputLabelShape.back();
+        const int dataBackDim = outputDataShape.back();
+        const int labelBackDim = outputLabelShape.back();
         int dataCol = 1;
         int labelCol = 1;
         for(int i = 1 ; i < outputLabelShape.size() - 1 ; ++i){
@@ -102,8 +105,9 @@ public:
 
         while(true){
             std::unique_lock<std::mutex> lck(mx);
-            while(idxList.size() < m_numWorkers && || dataPool.size() + busyWorkers >= m_numWorkers){
+            while(idxList.size() < m_batchSize || dataPool.size() + busyWorkers >= m_numWorkers){
                 if(stop) return;
+                std::cout << "waiting !" << std::endl;
                 cv_producers.wait(lck);
             }
             if(stop) return;
@@ -114,13 +118,14 @@ public:
             }
             lck.unlock();
             // xxxxx
+            std::cout << "get the file !" << std::endl;
             auto outputData = std::make_shared<Tensor<T>>(outputDataShape);
             auto outputLabel = std::make_shared<Tensor<T>>(outputLabelShape);
             for(int i = 0 ; i < m_batchSize ; ++i){
                 auto tempData = m_dataset->getItem(threadIdxList.back());
                 threadIdxList.pop_back();
-                outputData->getData().block<dataBackDim , dataCol>(0 , i*dataCol) = tempData.first->getData();
-                outputLabel->getData().block<labelBackDim , labelCol>(0 , i*labelCol) = tempData.second->getData();
+                outputData->getData().block(0 , i*dataCol , dataBackDim , dataCol) = tempData.first->getData();
+                outputLabel->getData().block(0 , i*labelCol , labelBackDim ,labelCol) = tempData.second->getData();
             }
             //xxx get the data
             lck.lock();
