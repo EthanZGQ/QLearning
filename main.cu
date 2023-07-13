@@ -18,7 +18,7 @@
 int main(){
 
     auto dataset = std::make_shared<constGenerator<float>>(22);
-    auto dataLoader = std::make_shared<DataLoader<float>>(dataset , 4 , 3);
+    auto dataLoader = std::make_shared<DataLoader<float>>(dataset , 3 , 3);
     for(int i = 0 ; i < 3 ; ++i){
         dataLoader->reset();    
         while(!dataLoader->empty()){
