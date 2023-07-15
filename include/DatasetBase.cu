@@ -32,7 +32,7 @@ public:
         Eigen::Array<T , Eigen::Dynamic , Eigen::Dynamic> inputlabel = Eigen::Array<T , Eigen::Dynamic , Eigen::Dynamic>::Constant(2,1 , idx);
         auto inputDataTensor = std::make_shared<Tensor<T>>(std::initializer_list<int>({2,3}) , inputdata);
         auto inputLabelTensor = std::make_shared<Tensor<T>>(std::initializer_list<int>({1,2}) , inputlabel);
-        std::this_thread::sleep_for(std::chrono::seconds(2));
+        std::this_thread::sleep_for(std::chrono::seconds(1));
         return {inputDataTensor, inputLabelTensor};
     }
 };
