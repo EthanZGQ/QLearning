@@ -129,6 +129,58 @@ public:
         backTensorNode->getData() = value;
     }
 
+    void backwardCompute(){
+        Eigen::Array<T , Eigen::Dynamic , Eigen::Dynamic> backNodeGrad = backTensorNode->getGrad();
+        std::cout << "the output grad is " << std::endl << backNodeGrad << std::endl << std::endl;
+        backNodeGrad.resize(backNodeGrad.size()/m_outChannals , m_outChannals);
+        std::cout << "the output resize grad is " << std::endl << backNodeGrad << std::endl << std::endl;
+        backNodeGrad.transposeInPlace();
+        std::cout << "the output grad is " << std::endl << backNodeGrad << std::endl << std::endl;
+        preTensorNodes["weights"]->getGrad() += (backNodeGrad.matrix() * m_img2colData->getData().transpose().matrix()).array();
+        m_img2colData->getGrad() += (preTensorNodes["weights"]->getData().transpose().matrix() * backNodeGrad.matrix()).array();
+        col2imgCpu();
+        m_img2colData->getGrad().setZero();
+    }
+
+    void col2imgCpu(){
+        auto inputShape = preTensorNodes["input"]->shape();
+        int batch = inputShape[0] , height = inputShape[2] , width = inputShape[3];
+        int colTime = backTensorNode->shape().back() , rowTime = backTensorNode->shape()[2];
+        int imgSize = width * height; //一个图片的大小
+        int featureMapSize = m_inChannals * imgSize; //一个特征图的大小
+        int flatKernalSize = m_kernalSize * m_kernalSize; //一个单层卷积核的大小
+        int oneLineSize = flatKernalSize * m_inChannals; //img2col之后 一列的长度
+        int oneLayerSize = oneLineSize* colTime * rowTime; //一个特征图 img2col之后的内存大小
+        int realKernalSize = m_kernalSize + (m_kernalSize - 1) * m_dilation; //经过稀疏卷积后的卷积和的宽高长度
+        T * output = preTensorNodes["input"]->getGrad().data();
+        T * input = m_img2colData->getGrad().data();
+        for(int _batch = 0 ; _batch < batch ; ++_batch){
+            for(int row = -m_padding ; row <= height + m_padding - realKernalSize; row += m_stride){
+                for(int col = -m_padding ; col <= width + m_padding - realKernalSize; col += m_stride){
+                    for(int _feature = 0 ; _feature < m_inChannals ; ++ _feature){
+                        for(int y = 0 ; y < m_kernalSize ; ++y){
+                            for(int x = 0 ; x < m_kernalSize ; ++x){
+                                T value ;
+                                int realY = y*(m_dilation + 1);
+                                int realX = x*(m_dilation + 1);
+                                if(realY + row < 0 || realY + row >= height || realX + col < 0 || realX + col >= width){ //判断边界关系
+                                    continue;
+                                } 
+                                else {
+                                    int index = _batch * oneLayerSize + ((row + m_padding)/m_stride) * colTime *oneLineSize + 
+                                    (col+m_padding)/m_stride * oneLineSize + flatKernalSize * _feature + y*m_kernalSize + x ;
+                                    value = input[index]; 
+                                }                //一个特征图的内存长度        //一行之后的内存长度       //一行之中的内存长度  
+                                int imgIndex = _batch * featureMapSize + _feature * imgSize + (realY + row)*width + (realX + col);
+                                output[imgIndex] += value;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     void img2colCpu(){
         auto inputShape = preTensorNodes["input"]->shape();
         int batch = inputShape[0] , height = inputShape[2] , width = inputShape[3];
@@ -181,7 +233,7 @@ public:
     }
 
     void backward(){
-
+        backwardCompute();
     };
 
 };
