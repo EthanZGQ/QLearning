@@ -21,7 +21,7 @@ int main(){
     data->getData() << 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,
     1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16;
     std::cout << "the input data is " << std::endl<< data->getData() << std::endl << std::endl;
-    int inputChannal = 2 , outputChannal = 3 , stride = 1, dilation = 0 , kernalSize = 3 , padding = 1 ;
+    int inputChannal = 2 , outputChannal = 3 , stride = 1, dilation = 0 , kernalSize = 3 , padding = 0 ;
     auto conv = std::make_shared<Conv2d<float>>(inputChannal , outputChannal , kernalSize , padding , stride , dilation);
     conv->preTensorNodes["weights"]->getData() = Eigen::ArrayXXf::Constant(outputChannal , kernalSize * kernalSize * inputChannal , 1);
     std::cout << "the weights data is " << std::endl<< conv->preTensorNodes["weights"]->getData() << std::endl << std::endl;

@@ -131,13 +131,12 @@ public:
 
     void backwardCompute(){
         Eigen::Array<T , Eigen::Dynamic , Eigen::Dynamic> backNodeGrad = backTensorNode->getGrad();
-        std::cout << "the output grad is " << std::endl << backNodeGrad << std::endl << std::endl;
         backNodeGrad.resize(backNodeGrad.size()/m_outChannals , m_outChannals);
-        std::cout << "the output resize grad is " << std::endl << backNodeGrad << std::endl << std::endl;
         backNodeGrad.transposeInPlace();
-        std::cout << "the output grad is " << std::endl << backNodeGrad << std::endl << std::endl;
         preTensorNodes["weights"]->getGrad() += (backNodeGrad.matrix() * m_img2colData->getData().transpose().matrix()).array();
         m_img2colData->getGrad() += (preTensorNodes["weights"]->getData().transpose().matrix() * backNodeGrad.matrix()).array();
+        std::cout << "the weights grad is " << std::endl << preTensorNodes["weights"]->getGrad() << std::endl << std::endl;
+        std::cout << "the img2colData grad is " << std::endl << m_img2colData ->getGrad() << std::endl << std::endl;
         col2imgCpu();
         m_img2colData->getGrad().setZero();
     }
