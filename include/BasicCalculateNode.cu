@@ -119,29 +119,38 @@ public:
         img2colCpu();
         Eigen::Array<T , Eigen::Dynamic , Eigen::Dynamic> value = preTensorNodes["weights"]->getData().matrix() * m_img2colData->getData().matrix();
         std::cout << "the output data is " << std::endl << value << std::endl << std::endl;
-        value.transposeInPlace();
-        std::cout << "the output transpose data is " << std::endl << value << std::endl << std::endl;
+        int batch = backTensorNode->shape().front();
+        int lineLen = value.size() / (m_outChannals * batch);
+        int colLen = backTensorNode->shape().back();
+        int rowLen = backTensorNode->shape()[2];
+        for(int tempBatch = 0 ; tempBatch < batch ; ++tempBatch){
+            Eigen::Array<T , Eigen::Dynamic , Eigen::Dynamic> tempValue = value.block(0 , lineLen * tempBatch , m_outChannals , lineLen);
+            tempValue.transposeInPlace();
+            tempValue.resize(colLen , rowLen*m_outChannals);
+            backTensorNode->getData().block(0 , tempBatch * m_outChannals * rowLen , colLen , m_outChannals * rowLen) = tempValue;
+        }
 
-        int size = value.size();
-        int row = backTensorNode->shape().back();
-        value.resize(row , size/row);
-        std::cout << "the output resize data is " << std::endl << value << std::endl << std::endl;
-        backTensorNode->getData() = value;
     }
 
     void backwardCompute(){
-        Eigen::Array<T , Eigen::Dynamic , Eigen::Dynamic> backNodeGrad = backTensorNode->getGrad();
-        backNodeGrad.resize(backNodeGrad.size()/m_outChannals , m_outChannals);
-        backNodeGrad.transposeInPlace();
+        int batch = backTensorNode->shape().front();
+        int colLen = backTensorNode->shape().back();
+        int rowLen = backTensorNode->shape()[2];
+        int lineLen = colLen * rowLen;
+        Eigen::Array<T , Eigen::Dynamic , Eigen::Dynamic> backNodeGrad(m_outChannals , batch * lineLen);
+        for(int tempBatch = 0 ; tempBatch < batch ; ++tempBatch){
+            Eigen::Array<T , Eigen::Dynamic , Eigen::Dynamic> tempValue = backTensorNode->getGrad().block(0 , m_outChannals * rowLen* tempBatch , colLen , m_outChannals * rowLen);
+            tempValue.resize(lineLen , m_outChannals);
+            tempValue.transposeInPlace();
+            backNodeGrad.block(0 , tempBatch * lineLen , m_outChannals , lineLen) = tempValue;
+        }
         preTensorNodes["weights"]->getGrad() += (backNodeGrad.matrix() * m_img2colData->getData().transpose().matrix()).array();
         m_img2colData->getGrad() += (preTensorNodes["weights"]->getData().transpose().matrix() * backNodeGrad.matrix()).array();
-        std::cout << "the weights grad is " << std::endl << preTensorNodes["weights"]->getGrad() << std::endl << std::endl;
-        std::cout << "the img2colData grad is " << std::endl << m_img2colData ->getGrad() << std::endl << std::endl;
-        col2imgCpu();
+        img2colbackwardCpu();
         m_img2colData->getGrad().setZero();
     }
 
-    void col2imgCpu(){
+    void img2colbackwardCpu(){
         auto inputShape = preTensorNodes["input"]->shape();
         int batch = inputShape[0] , height = inputShape[2] , width = inputShape[3];
         int colTime = backTensorNode->shape().back() , rowTime = backTensorNode->shape()[2];
