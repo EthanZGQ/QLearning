@@ -247,4 +247,64 @@ public:
 };
 
 
+
+template<class T>
+class Flatten:public CalculateNodeBase<T>{
+private:
+    int m_beginDim;
+    int m_endDim;
+
+    bool inferShape(std::initializer_list<std::shared_ptr<Tensor<T>>> & data){
+        if(data.size() != 1) throw "Only need one input !";
+        auto input = *(data.begin());
+        preTensorNodes["input"] = input;
+        input->addUseTime();
+        
+
+        std::vector<int> tempSize;
+        int beginDim = (m_beginDim + input->shape().size())%input->shape().size();
+        int endDim = (m_endDim + input->shape().size())%input->shape().size();
+        for(int i = 0 ; i < beginDim ; ++i){
+            tempSize.push_back(input->shape()[i]);
+        }
+        int len = 1;
+        for(int i = beginDim ; i <= endDim ; ++i){
+            len *= input->shape()[i];
+        }
+        if(beginDim != endDim) tempSize.push_back(len);
+        for(int i = endDim + 1 ; i < input->shape().size() ; ++i){
+            tempSize.push_back(input->shape()[i]);
+        }
+
+
+        if(!backTensorNode){
+            backTensorNode = std::make_shared<Tensor<T>>(tempSize , false , this);
+        }
+        else{
+            if(tempSize != backTensorNode->shape()){
+                backTensorNode = std::make_shared<Tensor<T>>(tempSize , false , this);
+            }
+        }
+        return true;
+    }    
+public:
+    Flatten(int beginDim = 1 , int endDim = -1): m_beginDim(beginDim) , m_endDim(endDim){
+    }
+
+    std::shared_ptr<Tensor<T>> forward(std::initializer_list<std::shared_ptr<Tensor<T>>> data) override{
+        inferShape(data);
+        backTensorNode->getData() = preTensorNodes["input"]->getData().reshaped(backTensorNode->shape().back(),
+        backTensorNode->getSize()/backTensorNode->shape().back());
+        return backTensorNode;
+    }
+
+    void backward() override{
+        int row = preTensorNodes["input"]->getGrad().rows();
+        int col = preTensorNodes["input"]->getGrad().cols();
+        preTensorNodes["input"]->getGrad() = backTensorNode->getGrad().reshaped(row ,col);
+    }
+
+
+};
+
 #endif //BASIC_CALCULATE_NODE
