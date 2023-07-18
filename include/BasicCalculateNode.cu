@@ -301,7 +301,7 @@ public:
     void backward() override{
         int row = preTensorNodes["input"]->getGrad().rows();
         int col = preTensorNodes["input"]->getGrad().cols();
-        preTensorNodes["input"]->getGrad() = backTensorNode->getGrad().reshaped(row ,col);
+        preTensorNodes["input"]->getGrad() += backTensorNode->getGrad().reshaped(row ,col);
     }
 
 

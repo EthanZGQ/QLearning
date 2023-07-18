@@ -107,7 +107,7 @@ public:
             std::unique_lock<std::mutex> lck(mx);
             while(idxList.size() < m_batchSize || dataPool.size() + busyWorkers >= m_numWorkers){
                 if(stop) return;
-                std::cout << "waiting !" << std::endl;
+                // std::cout << "waiting !" << std::endl;
                 cv_producers.wait(lck);
             }
             if(stop) return;
@@ -118,7 +118,7 @@ public:
             }
             lck.unlock();
             // xxxxx
-            std::cout << "get the file !" << std::endl;
+            // std::cout << "get the file !" << std::endl;
             auto outputData = std::make_shared<Tensor<T>>(outputDataShape);
             auto outputLabel = std::make_shared<Tensor<T>>(outputLabelShape);
             for(int i = 0 ; i < m_batchSize ; ++i){
