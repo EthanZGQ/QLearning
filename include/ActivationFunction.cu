@@ -33,7 +33,7 @@ public:
     }
 
     void backward() override{
-        preTensorNodes["input"]->getGrad() = backTensorNode->getGrad() * (1.f - backTensorNode->getData()) * backTensorNode->getData();
+        preTensorNodes["input"]->getGrad() += backTensorNode->getGrad() * (1.f - backTensorNode->getData()) * backTensorNode->getData();
     }
 
 };
@@ -69,7 +69,7 @@ public:
 
     void backward() override{
         auto fun = [](T first , T second){ return second > 0 ? first : 0 ;};
-        preTensorNodes["input"]->getGrad() = backTensorNode->getGrad().binaryExpr(preTensorNodes["input"]->getData() ,fun);
+        preTensorNodes["input"]->getGrad() += backTensorNode->getGrad().binaryExpr(preTensorNodes["input"]->getData() ,fun);
     }
 
 };
@@ -103,7 +103,7 @@ public:
     }
 
     void backward() override{
-        preTensorNodes["input"]->getGrad() = backTensorNode->getGrad() * (1 - backTensorNode->getData().pow(2));
+        preTensorNodes["input"]->getGrad() += backTensorNode->getGrad() * (1 - backTensorNode->getData().pow(2));
     }
 
 };

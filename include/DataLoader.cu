@@ -98,8 +98,10 @@ public:
         const int labelBackDim = outputLabelShape.back();
         int dataCol = 1;
         int labelCol = 1;
-        for(int i = 1 ; i < outputLabelShape.size() - 1 ; ++i){
+        for(int i = 1 ; i < outputDataShape.size() - 1 ; ++i){
             dataCol *= outputDataShape[i];
+        }
+        for(int i = 1 ; i < outputLabelShape.size() - 1 ; ++i){
             labelCol *= outputLabelShape[i];
         }
 
@@ -127,6 +129,7 @@ public:
                 outputData->getData().block(0 , i*dataCol , dataBackDim , dataCol) = tempData.first->getData();
                 outputLabel->getData().block(0 , i*labelCol , labelBackDim ,labelCol) = tempData.second->getData();
             }
+            // std::cout << "the img is " << std::endl << outputData->getData().transpose() << std::endl << std::endl;
             //xxx get the data
             lck.lock();
             --busyWorkers;

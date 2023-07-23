@@ -76,13 +76,13 @@ public:
                backTensorNode = std::make_shared<Tensor<T>>(input->shape(),
                false , this );
             }
-            backTensorNode->getData() =-(label->getData()*input->getData().log() + (1 - label->getData())*(1 - input->getData()).log() ) ;
+            backTensorNode->getData() =-(label->getData()*input->getData().log() + (1.f - label->getData())*(1.f - input->getData()).log() ) ;
         }
         else{
             if(!backTensorNode || (backTensorNode->shape().size() != 1 && backTensorNode->shape()[0] != 1)){
                backTensorNode = std::make_shared<Tensor<T>>(std::initializer_list<int>{1 },false , this );
             }
-            Eigen::Array<T , Eigen::Dynamic , Eigen::Dynamic> loss = -(label->getData()*input->getData().log() + (1 - label->getData())*(1 - input->getData()).log() ); 
+            Eigen::Array<T , Eigen::Dynamic , Eigen::Dynamic> loss = -(label->getData()*input->getData().log() + (1.f - label->getData())*(1.f - input->getData()).log() ); 
 
             if(m_average){
                 backTensorNode->getData() = loss.mean();
@@ -100,6 +100,7 @@ public:
         if(m_average){
             preTensorNodes["input"]->getGrad() /= preTensorNodes["input"]->getSize();
         }
+        // std::cout << "the input grad is "<<preTensorNodes["input"]->getGrad() << std::endl <<std::endl;
     } 
 };
 #endif

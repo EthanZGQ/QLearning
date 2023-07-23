@@ -76,13 +76,15 @@ public:
         img.resize(28);
         Eigen::Matrix<T , Eigen::Dynamic , Eigen::Dynamic> data;
         cv::cv2eigen(img , data);
-        auto inputDataTensor = std::make_shared<Tensor<T>>(std::initializer_list<int>({28,28}));
-        inputDataTensor->getData() = (data.transpose().array());
-        Eigen::Array<T , Eigen::Dynamic , Eigen::Dynamic> label(10,1);
+        auto inputDataTensor = std::make_shared<Tensor<T>>(std::initializer_list<int>({1,28,28}));
+        inputDataTensor->getData() = data.transpose().array()/255.f;
+        // std::cout << "the img is " << std::endl << inputDataTensor->getData().transpose() << std::endl << std::endl;
+        Eigen::Array<T , Eigen::Dynamic , Eigen::Dynamic> label(1,1);
         label.setZero();
         int labelIdx = *(fileName.end() - 5) - '0';
-        label(labelIdx , 0) = 1;
-        auto inputLabelTensor = std::make_shared<Tensor<T>>(std::initializer_list<int>({1,10}) , label);
+        if(labelIdx == 1)
+            label(0 , 0) = 1;
+        auto inputLabelTensor = std::make_shared<Tensor<T>>(std::initializer_list<int>({1,1}) , label);
         return {inputDataTensor , inputLabelTensor};
     }
 

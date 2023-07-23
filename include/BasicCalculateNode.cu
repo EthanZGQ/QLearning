@@ -46,8 +46,10 @@ private:
 public:
     Linear(int in_feature , int out_feature , bool bias = true):m_inFeature(in_feature) , m_outFeature(out_feature) , m_bias(bias) {
         preTensorNodes["weights"] = std::make_shared<Tensor<T>>(std::initializer_list<int>({in_feature , out_feature}) , true);
+        // preTensorNodes["weights"]->getData().setZero();
         if(m_bias){
             preTensorNodes["bias"] = std::make_shared<Tensor<T>>(std::initializer_list<int>({1 , out_feature}) , true);
+            // preTensorNodes["bias"]->getData().setZero();
         }
     };
 
@@ -118,7 +120,6 @@ public:
     void compute(){
         img2colCpu();
         Eigen::Array<T , Eigen::Dynamic , Eigen::Dynamic> value = preTensorNodes["weights"]->getData().matrix() * m_img2colData->getData().matrix();
-        std::cout << "the output data is " << std::endl << value << std::endl << std::endl;
         int batch = backTensorNode->shape().front();
         int lineLen = value.size() / (m_outChannals * batch);
         int colLen = backTensorNode->shape().back();
@@ -232,7 +233,7 @@ public:
     Conv2d(int inChannals , int outChannals , int kernalSize , int padding = 0 , int stride = 1 , int dilation = 0):
     m_inChannals(inChannals) , m_outChannals(outChannals) , m_kernalSize(kernalSize) , m_padding(padding) , m_stride(stride) , m_dilation(dilation){
         preTensorNodes["weights"] = std::make_shared<Tensor<T>>(std::initializer_list<int>({ m_inChannals, m_kernalSize , m_kernalSize , m_outChannals}) , true );
-        preTensorNodes["weights"]->getData().setConstant(1);
+        // preTensorNodes["weights"]->getData().setZero();
     }
     std::shared_ptr<Tensor<T>> forward(std::initializer_list<std::shared_ptr<Tensor<T>>> data) override{
         inferShape(data);
