@@ -6,6 +6,21 @@
 #include<initializer_list>
 #include<memory>
 
+
+template<typename T>
+struct sigmoidForward{
+__device__ T operator()(T & nums){
+    return 1.0f / (1.0f + __expf(-nums));
+}
+};
+
+template<typename T>
+struct sigmoidBackward{
+__device__ T operator()(T & afterGrad , T & value){
+   return afterGrad * (1 - value) * value;
+}
+};
+
 template<class T>
 class Sigmoid:public CalculateNodeBase<T>{
 private:
@@ -39,6 +54,23 @@ public:
 };
 
 
+
+template<typename T>
+struct reluForward{
+__device__ T operator()(T & nums){
+    T zero = static_cast<T>(0);
+    return nums > zero ? nums : zero ;
+}
+};
+
+
+template<typename T>
+struct reluBackward{
+__device__ T operator()(T & afterGrad , T & value){
+    T zero = static_cast<T>(0);
+    return value > zero ? afterGrad : zero ;
+}
+};
 
 template<class T>
 class ReLu:public CalculateNodeBase<T>{
@@ -74,6 +106,23 @@ public:
 
 };
 
+template<typename T>
+struct tanhForward{
+__device__ T operator()(T & nums){
+    T exp_1 = __expf(nums);
+    T exp_2 = static_cast<T>(1.0f)/exp_1;
+    return (exp_1 - exp_2)/(exp_1 + exp_2);
+}
+};
+
+template<typename T>
+struct tanhBackward{
+__device__ T operator()(T & afterGrad , T & value){
+    return afterGrad * (static_cast<T>(1.0f) - value * value);
+}
+};
+
+
 template<class T>
 class Tanh:public CalculateNodeBase<T>{
 private:
@@ -107,7 +156,6 @@ public:
     }
 
 };
-
 
 
 

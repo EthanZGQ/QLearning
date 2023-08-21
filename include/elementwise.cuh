@@ -32,7 +32,7 @@ void Binary(FUNC func , size_t Len ,O* output , A * input_1 , B * input_2){
 
 template<typename FUNC , typename O , typename A , typename B , typename C>
 void Ternary(FUNC func , size_t Len ,O* output , A * input_1 , B * input_2 , C * input_3){
-    elemetCompute(func , Len , output , input_1 , input_2 , input_3);
+    prepareAndCompute(func , Len , output , input_1 , input_2 , input_3);
 }
 
 #endif // ELEMENT_WISE
