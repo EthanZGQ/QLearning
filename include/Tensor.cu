@@ -7,6 +7,9 @@
 #include<queue>
 #include"cuda.h"
 #include"cuda_runtime.h"
+#include"cublas_v2.h"
+
+
 
 template<class T>
 class Tensor{
@@ -195,6 +198,14 @@ public:
             std::cout << "delete grad  okkkk ";
             cudaFree(m_gpuGrad);
         } 
+    }
+
+    T * getCudaDataPtr(){
+        return m_gpuData;
+    }
+
+    T * getCudaGradPtr(){
+        return m_gpuGrad;
     }
 
     bool inCuda(){

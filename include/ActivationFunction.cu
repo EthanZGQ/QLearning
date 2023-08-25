@@ -106,6 +106,7 @@ public:
 
 };
 
+<<<<<<< HEAD
 template<typename T>
 struct tanhForward{
 __device__ T operator()(T & nums){
@@ -121,6 +122,7 @@ __device__ T operator()(T & afterGrad , T & value){
     return afterGrad * (static_cast<T>(1.0f) - value * value);
 }
 };
+
 
 
 template<class T>

@@ -11,8 +11,10 @@ if(OpenCV_FOUND)
 endif(OpenCV_FOUND)
 
 set(Eigen_DIR "D:\\eigen\\eigen-3.4.0")
+set(cudaDir "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.1\\include")
 
 add_executable(main main.cu)
-target_include_directories(main PUBLIC ${MY_INCLUDE} ${OpenCV_INCLUDE_DIRS} ${Eigen_DIR})
-target_link_libraries(main ${OpenCV_LIBS})
+target_link_directories(main PUBLIC "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.1\\bin")
+target_include_directories(main PUBLIC ${MY_INCLUDE} ${OpenCV_INCLUDE_DIRS} ${Eigen_DIR} ${cudaDir} )
+target_link_libraries(main ${OpenCV_LIBS} cublas)
 
